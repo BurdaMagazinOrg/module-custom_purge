@@ -1,24 +1,24 @@
 <?php
 
-namespace Drupal\food_cache\Form;
+namespace Drupal\custom_purge\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
 /**
- * Class FoodCacheAdmin.
+ * Class CustomPurgeAdmin.
  *
- * @package Drupal\food_cache\Form
+ * @package Drupal\custom_purge\Form
  */
-class FoodCacheAdmin extends ConfigFormBase {
+class CustomPurgeAdmin extends ConfigFormBase {
 
   /**
    * {@inheritdoc}
    */
   protected function getEditableConfigNames() {
     return [
-      'food_cache.settings',
+      'custom_purge.settings',
     ];
   }
 
@@ -33,7 +33,7 @@ class FoodCacheAdmin extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config('food_cache.settings');
+    $config = $this->config('custom_purge.settings');
     // General settings.
     $form['general'] = [
       '#type' => 'details',
@@ -118,7 +118,7 @@ class FoodCacheAdmin extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
-    $this->config('food_cache.settings')
+    $this->config('custom_purge.settings')
       ->set('max_url_per_request', $form_state->getValue('max_url_per_request'))
       ->set('domain', $form_state->getValue('domain'))
       ->set('flood_interval', $form_state->getValue('flood_interval'))

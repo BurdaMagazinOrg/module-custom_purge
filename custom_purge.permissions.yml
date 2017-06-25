@@ -1,0 +1,5 @@
+administer custom_purge settings:
+  title: 'Administer custom_purge settings'
+
+use custom_purge url purger:
+  title: 'Use custom_purge url purger'

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\food_cache\Form;
+namespace Drupal\custom_purge\Form;
 
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Flood\FloodInterface;
@@ -9,11 +9,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class FoodCacheUrlPurger.
+ * Class CustomPurgeUrlPurger.
  *
- * @package Drupal\food_cache\Form
+ * @package Drupal\custom_purge\Form
  */
-class FoodCacheUrlPurger extends FormBase {
+class CustomPurgeUrlPurger extends FormBase {
 
   /**
    * The flood control mechanism.
@@ -30,7 +30,7 @@ class FoodCacheUrlPurger extends FormBase {
   protected $dateFormatter;
 
   /**
-   * Constructor
+   * Constructor.
    *
    * @param \Drupal\Core\Flood\FloodInterface $flood
    *   The flood control mechanism.
@@ -58,7 +58,7 @@ class FoodCacheUrlPurger extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'food_cache_url_purger';
+    return 'custom_purge_url_purger';
   }
 
   /**
@@ -66,15 +66,15 @@ class FoodCacheUrlPurger extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Get config settings.
-    $food_cache_config = $this->config('food_cache.settings');
-    $max_url_per_request = $food_cache_config->get('max_url_per_request');
+    $custom_purge_config = $this->config('custom_purge.settings');
+    $max_url_per_request = $custom_purge_config->get('max_url_per_request');
 
     // Flood protection.
-    $limit = $food_cache_config->get('flood_limit');
+    $limit = $custom_purge_config->get('flood_limit');
     // Get interval - convert to seconds.
-    $interval = $food_cache_config->get('flood_interval') * 60 * 60;
+    $interval = $custom_purge_config->get('flood_interval') * 60 * 60;
     // Number of flood entries.
-    $flood_count= $this->getFloodCount('food_cache_url_purger');
+    $flood_count= $this->getFloodCount('custom_purge_url_purger');
 
     $flood_info = $this->t('You already cleared %flood_count of %limit cache entries in @interval.', [
       '%limit' => $limit,
@@ -120,14 +120,14 @@ class FoodCacheUrlPurger extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
-    $config = $this->config('food_cache.settings');
+    $config = $this->config('custom_purge.settings');
 
     // Flood protection.
     $limit = $config->get('flood_limit');
     // Get interval - convert to seconds.
     $interval = $config->get('flood_interval') * 60 * 60;
 
-    if (!$this->flood->isAllowed('food_cache_url_purger', $limit, $interval, 'food_cache_url_purger')) {
+    if (!$this->flood->isAllowed('custom_purge_url_purger', $limit, $interval, 'custom_purge_url_purger')) {
       $form_state->setErrorByName('', $this->t('You cannot clear more than %limit cache entries in @interval. Try again later.', array(
         '%limit' => $limit,
         '@interval' => $this->dateFormatter->formatInterval($interval),
@@ -176,9 +176,9 @@ class FoodCacheUrlPurger extends FormBase {
     $this->purgeCloudflareCache($urls);
 
     // Register flood event for each url.
-    $flood_interval = $this->config('food_cache.settings')->get('flood.interval') * 60 * 60;
+    $flood_interval = $this->config('custom_purge.settings')->get('flood.interval') * 60 * 60;
     foreach ($urls as $url){
-      $this->flood->register('food_cache_url_purger', $flood_interval, 'food_cache_url_purger');
+      $this->flood->register('custom_purge_url_purger', $flood_interval, 'custom_purge_url_purger');
     }
   }
 
@@ -204,7 +204,7 @@ class FoodCacheUrlPurger extends FormBase {
 
     // Add log entry for purged urls.
     $message = 'purgeDrupalCache <pre>' . print_r($urls, TRUE) . '</pre>';
-    \Drupal::logger('food_cache')->notice($message);
+    \Drupal::logger('custom_purge')->notice($message);
   }
 
   /**
@@ -237,12 +237,12 @@ class FoodCacheUrlPurger extends FormBase {
 
       // Add log entry for erroneous purged urls.
       $message_errors = 'purgeVarnishCache error: <pre>' . print_r($errors, TRUE) . '</pre>';
-      \Drupal::logger('food_cache')->alert($message_errors);
+      \Drupal::logger('custom_purge')->alert($message_errors);
 
       // Add log entry for successfully purged urls.
       if (count($processed)) {
         $message = 'purgeVarnishCache success <pre>' . print_r($processed, TRUE) . '</pre>';
-        \Drupal::logger('food_cache')->info($message);
+        \Drupal::logger('custom_purge')->info($message);
       }
     }
     else {
@@ -251,7 +251,7 @@ class FoodCacheUrlPurger extends FormBase {
 
       // Add log entry for purged urls.
       $message = 'purgeVarnishCache success <pre>' . print_r($urls, TRUE) . '</pre>';
-      \Drupal::logger('food_cache')->info($message);
+      \Drupal::logger('custom_purge')->info($message);
     }
   }
 
@@ -266,8 +266,8 @@ class FoodCacheUrlPurger extends FormBase {
   function setVarnishPurgeCall($url) {
     // Default return value.
     $processed = FALSE;
-    // Get configuration form food_cache.
-    $config = $this->config('food_cache.settings');
+    // Get configuration form custom_purge.
+    $config = $this->config('custom_purge.settings');
     $curlopt_resolve = $config->get('domain') . ':' . $config->get('varnish_port') . ':' . $config->get('varnish_ip');
 
     // Initialize curl call.
@@ -343,7 +343,7 @@ class FoodCacheUrlPurger extends FormBase {
 
       // Add log entry for purged urls.
       $message = 'purgeCloudflareCache success <pre>' . print_r($urls, TRUE) . '</pre>';
-      \Drupal::logger('food_cache')->info($message);
+      \Drupal::logger('custom_purge')->info($message);
     }
     else {
       // Show status message.
@@ -351,7 +351,7 @@ class FoodCacheUrlPurger extends FormBase {
 
       // Add log entry for erroneous urls.
       $message = 'purgeCloudflareCache error <pre>' . print_r($urls, TRUE) . '</pre>';
-      \Drupal::logger('food_cache')->alert($message);
+      \Drupal::logger('custom_purge')->alert($message);
     }
   }
 
@@ -365,7 +365,7 @@ class FoodCacheUrlPurger extends FormBase {
     // Custom db query to get row count for checking flood protection.
     $query = \Drupal::database()->select('flood', 'f');
     $query->addField('f', 'fid');
-    $query->condition('event', 'food_cache_url_purger');
+    $query->condition('event', 'custom_purge_url_purger');
     $query->condition('identifier', $identifier);
     return $query->countQuery()->execute()->fetchField();
   }

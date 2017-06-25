@@ -1,0 +1,19 @@
+custom_purge.settings:
+  path: '/admin/config/custom_purge/settings'
+  defaults:
+    _form: '\Drupal\custom_purge\Form\CustomPurgeAdmin'
+    _title: 'Custom purge settings'
+  requirements:
+    _permission: 'administer custom_purge settings'
+  options:
+    _admin_route: TRUE
+
+custom_purge.url_purger:
+  path: '/admin/config/custom_purge/url_purger'
+  defaults:
+    _form: '\Drupal\custom_purge\Form\CustomPurgeUrlPurger'
+    _title: 'Purge urls from caches'
+  requirements:
+    _permission: 'use custom_purge url purger'
+  options:
+    _admin_route: TRUE
