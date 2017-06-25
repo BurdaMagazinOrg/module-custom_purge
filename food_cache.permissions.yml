@@ -1,0 +1,5 @@
+administer food_cache settings:
+  title: 'Administer food_cache settings'
+
+use food_cache url purger:
+  title: 'Use food_cache url purger'

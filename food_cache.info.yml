@@ -1,0 +1,8 @@
+name: Food cache
+type: module
+description: "Extend / configure caching for food."
+core: 8.x
+package: food
+
+dependencies:
+  - cloudflare

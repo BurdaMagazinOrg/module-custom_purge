@@ -1,0 +1,14 @@
+# Focus cache menu items definition
+food_cache.admin_settings:
+  title: 'Food cache settings'
+  route_name: food_cache.settings
+  description: 'Configure food_cache settings'
+  parent: food_ui.admin_config_food
+  weight: 99
+
+food_cache.url_purger:
+  title: 'Purge urls from caches'
+  route_name: food_cache.url_purger
+  description: 'Clear drupal/ varnish/ cloudflare caches'
+  parent: admin_toolbar_tools.help
+  weight: 99
