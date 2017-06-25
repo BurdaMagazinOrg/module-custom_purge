@@ -1,0 +1,9 @@
+{
+  "name": "burdamagazinorg/custom_purge",
+  "type": "drupal-module",
+  "extra": {
+    "branch-alias": {
+      "dev-8.x-1.x": "1.x-dev"
+    }
+  }
+}
