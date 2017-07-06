@@ -3,6 +3,3 @@ type: module
 description: "Customized cache purging."
 core: 8.x
 package: burda
-
-dependencies:
-  - cloudflare

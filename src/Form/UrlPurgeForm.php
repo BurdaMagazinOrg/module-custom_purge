@@ -6,14 +6,15 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Flood\FloodInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\custom_purge\UrlPurger;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class CustomPurgeUrlPurger.
+ * Class UrlPurgeForm.
  *
  * @package Drupal\custom_purge\Form
  */
-class CustomPurgeUrlPurger extends FormBase {
+class UrlPurgeForm extends FormBase {
 
   /**
    * The flood control mechanism.
@@ -30,17 +31,26 @@ class CustomPurgeUrlPurger extends FormBase {
   protected $dateFormatter;
 
   /**
+   * The Url purger.
+   *
+   * @var \Drupal\custom_purge\UrlPurger
+   */
+  protected $purger;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Flood\FloodInterface $flood
    *   The flood control mechanism.
-   *
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The date service.
+   * @param \Drupal\custom_purge\UrlPurger $purger
+   *   The Url purger.
    */
-  public function __construct(FloodInterface $flood, DateFormatterInterface $date_formatter) {
+  public function __construct(FloodInterface $flood, DateFormatterInterface $date_formatter, UrlPurger $purger) {
     $this->flood = $flood;
     $this->dateFormatter = $date_formatter;
+    $this->purger = $purger;
   }
 
   /**
@@ -49,10 +59,10 @@ class CustomPurgeUrlPurger extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('flood'),
-      $container->get('date.formatter')
+      $container->get('date.formatter'),
+      $container->get('custom_purge.url_purger')
     );
   }
-
 
   /**
    * {@inheritdoc}
@@ -189,15 +199,7 @@ class CustomPurgeUrlPurger extends FormBase {
    *  - array of urls to be purged.
    */
   public function purgeDrupalCacheRender($urls) {
-    $database = \Drupal::database();
-    // Clear cache_render for defined urls.
-    foreach ($urls as $url) {
-      // Build cid key.
-      $cid = $url . ':html';
-      $database->delete('cache_render')
-        ->condition('cid', $cid)
-        ->execute();
-    }
+    $this->purger->purgeDrupalCacheRender($urls);
 
     // Show status message.
     drupal_set_message(t('Drupal cache_render was purged successfully - processed @processed url(s)', ['@processed' => count($urls)]));
@@ -214,40 +216,29 @@ class CustomPurgeUrlPurger extends FormBase {
    *  - array of urls to be purged.
    */
   public function purgeVarnishCache($urls) {
-    // Store process/ errors in variables.
-    $processed = [];
-    $errors = [];
-    // Clear varnish cache for defined urls.
-    foreach ($urls as $url) {
-      if ($this->setVarnishPurgeCall($url)) {
-        $processed[] = $url;
-      }
-      else {
-        $errors[] = $url;
-      }
-    }
+    $info = $this->purger->purgeVarnishCache($urls);
 
     // Check for possible errors / basic logging.
-    if (count($errors)) {
+    if (count($info['errors'])) {
       // Show status message.
       drupal_set_message(t('Varnish was purged successfully - processed @processed/@urls url(s). Please check logs fore more information.', [
-        '@processed' => count($processed),
+        '@processed' => count($info['processed']),
         '@urls' => count($urls)
       ]), 'warning');
 
       // Add log entry for erroneous purged urls.
-      $message_errors = 'purgeVarnishCache error: <pre>' . print_r($errors, TRUE) . '</pre>';
+      $message_errors = 'purgeVarnishCache error: <pre>' . print_r($info['errors'], TRUE) . '</pre>';
       \Drupal::logger('custom_purge')->alert($message_errors);
 
       // Add log entry for successfully purged urls.
-      if (count($processed)) {
-        $message = 'purgeVarnishCache success <pre>' . print_r($processed, TRUE) . '</pre>';
+      if (count($info['processed'])) {
+        $message = 'purgeVarnishCache success <pre>' . print_r($info['processed'], TRUE) . '</pre>';
         \Drupal::logger('custom_purge')->info($message);
       }
     }
     else {
       // Show status message.
-      drupal_set_message(t('Varnish was purged successfully - processed @processed url(s)', ['@processed' => count($processed)]));
+      drupal_set_message(t('Varnish was purged successfully - processed @processed url(s)', ['@processed' => count($info['processed'])]));
 
       // Add log entry for purged urls.
       $message = 'purgeVarnishCache success <pre>' . print_r($urls, TRUE) . '</pre>';
@@ -256,88 +247,15 @@ class CustomPurgeUrlPurger extends FormBase {
   }
 
   /**
-   * Build curl request for purging varnish.
-   *
-   * @param $url
-   *  - single url that will be purged from varnish
-   *
-   * @return boolean
-   */
-  function setVarnishPurgeCall($url) {
-    // Default return value.
-    $processed = FALSE;
-    // Get configuration form custom_purge.
-    $config = $this->config('custom_purge.settings');
-    $curlopt_resolve = $config->get('domain') . ':' . $config->get('varnish_port') . ':' . $config->get('varnish_ip');
-
-    // Initialize curl call.
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_RESOLVE, [$curlopt_resolve]);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PURGE');
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-      'Accept-Encoding: gzip',
-      'X-Acquia-Purge: ' . $config->get('varnish_acquia_environment')
-    ]);
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-    // Execute curl call.
-    curl_exec($ch);
-    // Check for possible errors.
-    if (!curl_errno($ch)) {
-      if (curl_getinfo($ch, CURLINFO_HTTP_CODE) == 200) {
-        $processed = TRUE;
-      }
-    }
-    // Close curl connection.
-    curl_close($ch);
-    return $processed;
-  }
-
-  /**
    * Purge cloudflare cache for fiven urls.
    *
    * @param $url
    */
   function purgeCloudflareCache($urls) {
-    // Default processed status.
-    $processed = FALSE;
-    $config = $this->config('cloudflare.settings');
-    // Set cloudflare related API url.
-    $cf_api_url = "https://api.cloudflare.com/client/v4/zones/" . $config->get('zone_id') . "/purge_cache";
-    // Set cloudflare related headers used by curl call.
-    $cf_header = [
-      'X-Auth-Email: ' . $config->get('email'),
-      'X-Auth-Key: ' . $config->get('apikey'),
-      'Content-Type: application/json'
-    ];
-
-    // Initialize curl call.
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $cf_header);
-    curl_setopt($ch, CURLOPT_URL, $cf_api_url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, TRUE);
-    // Set urls to be purged.
-    $json_data = json_encode(['files' => $urls]);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
-
-    // Execute curl call.
-    curl_exec($ch);
-
-    // Check for possible errors.
-    if (!curl_errno($ch)) {
-      if (curl_getinfo($ch, CURLINFO_HTTP_CODE) == 200) {
-        $processed = TRUE;
-      }
-    }
-    // Close curl connection.
-    curl_close($ch);
+    $info = $this->purger->purgeCloudflareCache($urls);
 
     // Logging / Messages.
-    if ($processed) {
+    if (count($info['processed'])) {
       // Show status message.
       drupal_set_message(t('Cloudflare cache was purged successfully - processed @processed url(s)', ['@processed' => count($urls)]));
 

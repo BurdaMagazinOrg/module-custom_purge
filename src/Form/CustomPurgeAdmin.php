@@ -92,17 +92,19 @@ class CustomPurgeAdmin extends ConfigFormBase {
       '#default_value' => $config->get('varnish_acquia_environment')
     ];
 
-    // Cloudflare related settings.
-    $form['cloudflare'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Cloudflare'),
-      '#open' => TRUE
-    ];
+    $cloudflare_settings_url = Url::fromRoute('cloudflare.admin_settings_form');
+    if ($cloudflare_settings_url->isRouted()) {
+      // Cloudflare related settings.
+      $form['cloudflare'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Cloudflare'),
+        '#open' => TRUE
+      ];
 
-    $cloudflare_settings_url = Url::fromRoute('cloudflare.admin_settings_form')->toString();
-    $form['cloudflare']['info'] = [
-      '#markup' => $this->t('Cloudflare can be configured via <a href="@cloudflare_settings">CloudFlare Settings</a>', ['@cloudflare_settings' => $cloudflare_settings_url]),
-    ];
+      $form['cloudflare']['info'] = [
+        '#markup' => $this->t('Cloudflare can be configured via <a href="@cloudflare_settings">CloudFlare Settings</a>', ['@cloudflare_settings' => $cloudflare_settings_url->toString()]),
+      ];
+    }
     return parent::buildForm($form, $form_state);
   }
 
