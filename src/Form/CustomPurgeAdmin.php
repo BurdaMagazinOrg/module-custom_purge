@@ -5,6 +5,7 @@ namespace Drupal\custom_purge\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Class CustomPurgeAdmin.
@@ -92,8 +93,8 @@ class CustomPurgeAdmin extends ConfigFormBase {
       '#default_value' => $config->get('varnish_acquia_environment')
     ];
 
-    $cloudflare_settings_url = Url::fromRoute('cloudflare.admin_settings_form');
-    if ($cloudflare_settings_url->isRouted()) {
+    try {
+      $cloudflare_settings_url = Url::fromRoute('cloudflare.admin_settings_form');
       // Cloudflare related settings.
       $form['cloudflare'] = [
         '#type' => 'details',
@@ -105,6 +106,7 @@ class CustomPurgeAdmin extends ConfigFormBase {
         '#markup' => $this->t('Cloudflare can be configured via <a href="@cloudflare_settings">CloudFlare Settings</a>', ['@cloudflare_settings' => $cloudflare_settings_url->toString()]),
       ];
     }
+    catch (RouteNotFoundException $exception) {}
     return parent::buildForm($form, $form_state);
   }
 
