@@ -113,6 +113,8 @@ class UrlPurger {
 
       // Initialize curl call.
       $ch = curl_init();
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 3);
       curl_setopt($ch, CURLOPT_RESOLVE, [$curlopt_resolve]);
       curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PURGE');
       curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -162,11 +164,12 @@ class UrlPurger {
 
       // Initialize curl call.
       $ch = curl_init();
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 3);
       curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
       curl_setopt($ch, CURLOPT_HTTPHEADER, $cf_header);
       curl_setopt($ch, CURLOPT_URL, $cf_api_url);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-      curl_setopt($ch, CURLOPT_TIMEOUT, 30);
       curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, TRUE);
       // Set urls to be purged.
       $json_data = json_encode(['files' => $urls]);
