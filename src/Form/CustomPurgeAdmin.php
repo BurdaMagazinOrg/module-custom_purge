@@ -68,29 +68,35 @@ class CustomPurgeAdmin extends ConfigFormBase {
     $form['general']['domain'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Domain'),
-      '#default_value' => $config->get('domain')
+      '#default_value' => $config->get('domain'),
     ];
 
     // Varnish related settings.
     $form['varnish'] = [
       '#type' => 'details',
       '#title' => $this->t('Varnish'),
-      '#open' => TRUE
+      '#open' => TRUE,
     ];
     $form['varnish']['varnish_port'] = [
       '#type' => 'number',
       '#title' => $this->t('Port'),
-      '#default_value' => $config->get('varnish_port')
+      '#default_value' => $config->get('varnish_port'),
     ];
     $form['varnish']['varnish_ip'] = [
       '#type' => 'textfield',
       '#title' => $this->t('IP'),
-      '#default_value' => $config->get('varnish_ip')
+      '#default_value' => $config->get('varnish_ip'),
     ];
     $form['varnish']['varnish_acquia_environment'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Acquia environment'),
-      '#default_value' => $config->get('varnish_acquia_environment')
+      '#default_value' => $config->get('varnish_acquia_environment'),
+    ];
+    $form['varnish']['varnish_verifyhost'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Verify host SSL certificate'),
+      '#description' => $this->t('Some (shared) varnish instances have invalid or no SSL certificate. <em>Careful</em>: This could lead to security implications.'),
+      '#default_value' => ($config->get('varnish_verifyhost') !== NULL) ? $config->get('varnish_verifyhost') : 1,
     ];
 
     try {
@@ -99,7 +105,7 @@ class CustomPurgeAdmin extends ConfigFormBase {
       $form['cloudflare'] = [
         '#type' => 'details',
         '#title' => $this->t('Cloudflare'),
-        '#open' => TRUE
+        '#open' => TRUE,
       ];
 
       $form['cloudflare']['info'] = [
@@ -130,6 +136,7 @@ class CustomPurgeAdmin extends ConfigFormBase {
       ->set('varnish_port', $form_state->getValue('varnish_port'))
       ->set('varnish_ip', $form_state->getValue('varnish_ip'))
       ->set('varnish_acquia_environment', $form_state->getValue('varnish_acquia_environment'))
+      ->set('varnish_verifyhost', (bool) $form_state->getValue('varnish_verifyhost'))
       ->save();
   }
 }
