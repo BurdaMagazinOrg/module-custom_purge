@@ -119,8 +119,8 @@ class UrlPurger {
       ]);
       curl_setopt($ch, CURLOPT_URL, $url);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-      if ($config->get('varnish_verifyhost') !== NULL) {
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, (bool) $config->get('varnish_verifyhost'));
+      if ($config->get('varnish_verifyhost') === FALSE) {
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
       }
 
       // Execute curl call.
