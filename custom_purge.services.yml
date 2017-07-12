@@ -1,4 +1,4 @@
 services:
   custom_purge.url_purger:
     class: Drupal\custom_purge\UrlPurger
-    arguments: ['@config.factory', '@database']
+    arguments: ['@config.factory', '@cache.render']

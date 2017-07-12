@@ -2,9 +2,8 @@
 
 namespace Drupal\custom_purge;
 
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Database\Connection;
-
 /**
  * Class UrlPurger which defines a service for purging Urls.
  *
@@ -20,23 +19,23 @@ class UrlPurger {
   protected $configFactory;
 
   /**
-   * The database connection.
+   * The render cache.
    *
-   * @var \Drupal\Core\Database\Connection $database
+   * @var \Drupal\Core\Cache\CacheBackendInterface
    */
-  protected $database;
+  protected $renderCache;
 
   /**
    * UrlPurger constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The purge settings.
-   * @param \Drupal\Core\Database\Connection $database
-   *   The database connection.
+   *   The config factory service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $render_cache
+   *   The render cache.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, Connection $database) {
+  public function __construct(ConfigFactoryInterface $config_factory, CacheBackendInterface $render_cache) {
     $this->configFactory = $config_factory;
-    $this->database = $database;
+    $this->renderCache = $render_cache;
   }
 
   /**
@@ -52,7 +51,7 @@ class UrlPurger {
   }
 
   /**
-   * Clean up drupal cache_render table by given urls.
+   * Clean up drupal page cache (render cache) by given urls.
    *
    * @param $urls
    *   An array of urls to be purged.
@@ -64,11 +63,8 @@ class UrlPurger {
   public function purgeDrupalCacheRender($urls) {
     // Clear cache_render for defined urls.
     foreach ($urls as $url) {
-      // Build cid key.
       $cid = $url . ':html';
-      $this->database->delete('cache_render')
-        ->condition('cid', $cid)
-        ->execute();
+      $this->renderCache->delete($cid);
     }
     return ['processed' => $urls, 'errors' => []];
   }
