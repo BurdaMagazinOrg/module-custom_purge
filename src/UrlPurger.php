@@ -122,6 +122,9 @@ class UrlPurger {
       if ($config->get('varnish_verifyhost') === FALSE) {
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
       }
+      if ($config->get('varnish_verifypeer') === FALSE) {
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+      }
 
       // Execute curl call.
       curl_exec($ch);

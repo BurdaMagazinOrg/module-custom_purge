@@ -95,8 +95,14 @@ class CustomPurgeAdmin extends ConfigFormBase {
     $form['varnish']['varnish_verifyhost'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Verify host SSL certificate'),
-      '#description' => $this->t('Some (shared) varnish instances have invalid or no SSL certificate. <em>Careful</em>: This could lead to security implications.'),
+      '#description' => $this->t('Some (shared) varnish instances have invalid or no SSL certificate. <em>Careful</em>: Disabling this option could lead to security implications.'),
       '#default_value' => ($config->get('varnish_verifyhost') !== NULL) ? $config->get('varnish_verifyhost') : 1,
+    ];
+    $form['varnish']['varnish_verifypeer'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Verify peer SSL certificate'),
+      '#description' => $this->t('There might be cases, where the peer certificate cannot be authenticated with known CA certificates. <em>Careful</em>: Disabling this option could lead to security implications.'),
+      '#default_value' => ($config->get('varnish_verifypeer') !== NULL) ? $config->get('varnish_verifypeer') : 1,
     ];
 
     try {
@@ -137,6 +143,7 @@ class CustomPurgeAdmin extends ConfigFormBase {
       ->set('varnish_ip', $form_state->getValue('varnish_ip'))
       ->set('varnish_acquia_environment', $form_state->getValue('varnish_acquia_environment'))
       ->set('varnish_verifyhost', (bool) $form_state->getValue('varnish_verifyhost'))
+      ->set('varnish_verifypeer', (bool) $form_state->getValue('varnish_verifypeer'))
       ->save();
   }
 }
