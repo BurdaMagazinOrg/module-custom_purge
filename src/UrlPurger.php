@@ -19,23 +19,23 @@ class UrlPurger {
   protected $configFactory;
 
   /**
-   * The render cache.
+   * The cache backend for the page cache.
    *
    * @var \Drupal\Core\Cache\CacheBackendInterface
    */
-  protected $renderCache;
+  protected $pageCacheBackend;
 
   /**
    * UrlPurger constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $render_cache
-   *   The render cache.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $page_cache
+   *   The cache backend for the page cache.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, CacheBackendInterface $render_cache) {
+  public function __construct(ConfigFactoryInterface $config_factory, CacheBackendInterface $page_cache) {
     $this->configFactory = $config_factory;
-    $this->renderCache = $render_cache;
+    $this->pageCacheBackend = $page_cache;
   }
 
   /**
@@ -45,13 +45,13 @@ class UrlPurger {
    *   An array of urls to be purged.
    */
   public function purgeAllProviders(array $urls) {
-    $this->purgeDrupalCacheRender($urls);
+    $this->purgeDrupalCache($urls);
     $this->purgeVarnishCache($urls);
     $this->purgeCloudflareCache($urls);
   }
 
   /**
-   * Clean up drupal page cache (render cache) by given urls.
+   * Clean up drupal page cache by given urls.
    *
    * @param $urls
    *   An array of urls to be purged.
@@ -60,11 +60,10 @@ class UrlPurger {
    *   Successfully processed urls are grouped into the key 'processed',
    *   whereas not successfully process urls are grouped into the key 'errors'.
    */
-  public function purgeDrupalCacheRender($urls) {
-    // Clear cache_render for defined urls.
+  public function purgeDrupalCache($urls) {
     foreach ($urls as $url) {
       $cid = $url . ':html';
-      $this->renderCache->delete($cid);
+      $this->pageCacheBackend->delete($cid);
     }
     return ['processed' => $urls, 'errors' => []];
   }

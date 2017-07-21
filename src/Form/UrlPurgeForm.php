@@ -191,7 +191,7 @@ class UrlPurgeForm extends FormBase {
     }
 
     // Purge drupal caches.
-    $this->purgeDrupalCacheRender($urls);
+    $this->purgeDrupalCache($urls);
     // Purge varnish caches.
     $this->purgeVarnishCache($urls);
     // Purge cloudflare caches.
@@ -208,16 +208,16 @@ class UrlPurgeForm extends FormBase {
   }
 
   /**
-   * Clean up drupal cache_render table by given urls.
+   * Clean up drupal page cache by given urls.
    *
    * @param $urls
    *  - array of urls to be purged.
    */
-  public function purgeDrupalCacheRender($urls) {
-    $this->purger->purgeDrupalCacheRender($urls);
+  public function purgeDrupalCache($urls) {
+    $this->purger->purgeDrupalCache($urls);
 
     // Show status message.
-    drupal_set_message(t('Drupal cache_render was purged successfully - processed @processed url(s)', ['@processed' => count($urls)]));
+    drupal_set_message(t('Drupal page cache was purged successfully - processed @processed url(s)', ['@processed' => count($urls)]));
 
     // Add log entry for purged urls.
     $message = 'purgeDrupalCache <pre>' . print_r($urls, TRUE) . '</pre>';
