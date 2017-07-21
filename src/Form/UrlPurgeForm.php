@@ -3,6 +3,7 @@
 namespace Drupal\custom_purge\Form;
 
 use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Flood\FloodInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -38,6 +39,13 @@ class UrlPurgeForm extends FormBase {
   protected $purger;
 
   /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Flood\FloodInterface $flood
@@ -46,11 +54,14 @@ class UrlPurgeForm extends FormBase {
    *   The date service.
    * @param \Drupal\custom_purge\UrlPurger $purger
    *   The Url purger.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler service.
    */
-  public function __construct(FloodInterface $flood, DateFormatterInterface $date_formatter, UrlPurger $purger) {
+  public function __construct(FloodInterface $flood, DateFormatterInterface $date_formatter, UrlPurger $purger, ModuleHandlerInterface $module_handler) {
     $this->flood = $flood;
     $this->dateFormatter = $date_formatter;
     $this->purger = $purger;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -60,7 +71,8 @@ class UrlPurgeForm extends FormBase {
     return new static(
       $container->get('flood'),
       $container->get('date.formatter'),
-      $container->get('custom_purge.url_purger')
+      $container->get('custom_purge.url_purger'),
+      $container->get('module_handler')
     );
   }
 
@@ -184,6 +196,9 @@ class UrlPurgeForm extends FormBase {
     $this->purgeVarnishCache($urls);
     // Purge cloudflare caches.
     $this->purgeCloudflareCache($urls);
+
+    // Allow other modules to act upon the manual purge of Urls.
+    $this->moduleHandler->invokeAll('manual_custom_purge', [$urls]);
 
     // Register flood event for each url.
     $flood_interval = $this->config('custom_purge.settings')->get('flood.interval') * 60 * 60;
