@@ -1,0 +1,13 @@
+max_url_per_request: '25'
+domain: ''
+flood_interval: '24'
+flood_limit: '100'
+purge_caches:
+  render_cache: 1
+  varnish: 1
+  cloudflare: 1
+varnish_port: ''
+varnish_ip: ''
+varnish_acquia_environment: ''
+varnish_verifyhost: true
+varnish_verifypeer: true
