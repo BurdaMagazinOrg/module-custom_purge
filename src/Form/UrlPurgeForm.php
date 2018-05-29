@@ -208,6 +208,29 @@ class UrlPurgeForm extends FormBase {
   }
 
   /**
+   * Checks if purging is enabled for particular cache type.
+   *
+   * @param string. $cache
+   *  Cache type.
+   * @param bool $silent
+   *   Whether to show the drupal messages.
+   *
+   * @return bool
+   *   Status if purging is enabled for given cache type.
+   */
+  public function isPurgingEnabled($cache, $silent = FALSE) {
+    $config = $this->config('custom_purge.settings')->get('purge_caches');
+    if (empty($config['purge_caches'][$cache])) {
+      if (!$silent) {
+        // Show status message.
+        drupal_set_message(t('Cache purging for @cache is not enabled - omitting.', ['@cache' => $cache]));
+      }
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  /**
    * Clean up drupal page cache by given urls.
    *
    * @param array $urls
@@ -216,6 +239,9 @@ class UrlPurgeForm extends FormBase {
    *   Whether to show the result messages.
    */
   public function purgeDrupalCache($urls, $silent = FALSE) {
+    if (!$this->isPurgingEnabled('render_cache', $silent)) {
+      return;
+    }
     $this->purger->purgeDrupalCache($urls);
 
     if (!$silent) {
@@ -237,6 +263,9 @@ class UrlPurgeForm extends FormBase {
    *   Whether to show the result messages.
    */
   public function purgeVarnishCache($urls, $silent = FALSE) {
+    if (!$this->isPurgingEnabled('varnish', $silent)) {
+      return;
+    }
     $info = $this->purger->purgeVarnishCache($urls);
 
     // Check for possible errors / basic logging.
@@ -280,6 +309,9 @@ class UrlPurgeForm extends FormBase {
    *   Whether to show the result messages.
    */
   function purgeCloudflareCache($urls, $silent = FALSE) {
+    if (!$this->isPurgingEnabled('cloudflare', $silent)) {
+      return;
+    }
     $info = $this->purger->purgeCloudflareCache($urls);
 
     // Logging / Messages.
