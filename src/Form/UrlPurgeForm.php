@@ -296,7 +296,10 @@ class UrlPurgeForm extends FormBase {
     else {
       if (!$silent) {
         // Show status message.
-        drupal_set_message(t('Error while clearing cloudflare cache for given urls. Please check log.'));
+        drupal_set_message(t('Error while clearing cloudflare cache for given urls - processed @processed/@urls url(s). Please check logs fore more information.', [
+          '@processed' => count($info['processed']),
+          '@urls' => count($urls)
+        ]), 'warning');
       }
 
       // Add log entry for erroneous urls.
