@@ -243,7 +243,7 @@ class UrlPurgeForm extends FormBase {
     if (count($info['errors'])) {
       if (!$silent) {
         // Show status message.
-        drupal_set_message(t('Varnish was purged successfully - processed @processed/@urls url(s). Please check logs fore more information.', [
+        drupal_set_message(t('Error while clearing varnish cache for given urls - processed @processed/@urls url(s). Please check logs fore more information.', [
           '@processed' => count($info['processed']),
           '@urls' => count($urls)
         ]), 'warning');
