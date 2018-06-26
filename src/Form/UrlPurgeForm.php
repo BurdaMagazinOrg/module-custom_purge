@@ -208,16 +208,37 @@ class UrlPurgeForm extends FormBase {
   }
 
   /**
+   * Checks if purging is enabled for particular cache type.
+   *
+   * @param string. $cache
+   *  Cache type.
+   *
+   * @return bool
+   *   Status if purging is enabled for given cache type.
+   */
+  public function isPurgingEnabled($cache) {
+    $purge_caches_config = $this->config('custom_purge.settings')->get('purge_caches');
+    return !empty($purge_caches_config[$cache]);
+  }
+
+  /**
    * Clean up drupal page cache by given urls.
    *
-   * @param $urls
+   * @param array $urls
    *  - array of urls to be purged.
+   * @param bool $silent
+   *   Whether to show the result messages.
    */
-  public function purgeDrupalCache($urls) {
+  public function purgeDrupalCache($urls, $silent = FALSE) {
+    if (!$this->isPurgingEnabled('render_cache')) {
+      return;
+    }
     $this->purger->purgeDrupalCache($urls);
 
-    // Show status message.
-    drupal_set_message(t('Drupal page cache was purged successfully - processed @processed url(s)', ['@processed' => count($urls)]));
+    if (!$silent) {
+      // Show status message.
+      drupal_set_message(t('Drupal cache_render was purged successfully - processed @processed url(s)', ['@processed' => count($urls)]));
+    }
 
     // Add log entry for purged urls.
     $message = 'purgeDrupalCache <pre>' . print_r($urls, TRUE) . '</pre>';
@@ -227,19 +248,26 @@ class UrlPurgeForm extends FormBase {
   /**
    * Clean up varnish cache with given urls.
    *
-   * @param $urls
+   * @param array $urls
    *  - array of urls to be purged.
+   * @param bool $silent
+   *   Whether to show the result messages.
    */
-  public function purgeVarnishCache($urls) {
+  public function purgeVarnishCache($urls, $silent = FALSE) {
+    if (!$this->isPurgingEnabled('varnish')) {
+      return;
+    }
     $info = $this->purger->purgeVarnishCache($urls);
 
     // Check for possible errors / basic logging.
     if (count($info['errors'])) {
-      // Show status message.
-      drupal_set_message(t('Varnish was purged successfully - processed @processed/@urls url(s). Please check logs fore more information.', [
-        '@processed' => count($info['processed']),
-        '@urls' => count($urls)
-      ]), 'warning');
+      if (!$silent) {
+        // Show status message.
+        drupal_set_message(t('Error while clearing varnish cache for given urls - processed @processed/@urls url(s). Please check logs fore more information.', [
+          '@processed' => count($info['processed']),
+          '@urls' => count($urls)
+        ]), 'warning');
+      }
 
       // Add log entry for erroneous purged urls.
       $message_errors = 'purgeVarnishCache error: <pre>' . print_r($info['errors'], TRUE) . '</pre>';
@@ -252,8 +280,10 @@ class UrlPurgeForm extends FormBase {
       }
     }
     else {
-      // Show status message.
-      drupal_set_message(t('Varnish was purged successfully - processed @processed url(s)', ['@processed' => count($info['processed'])]));
+      if (!$silent) {
+        // Show status message.
+        drupal_set_message(t('Varnish was purged successfully - processed @processed url(s)', ['@processed' => count($info['processed'])]));
+      }
 
       // Add log entry for purged urls.
       $message = 'purgeVarnishCache success <pre>' . print_r($urls, TRUE) . '</pre>';
@@ -264,23 +294,36 @@ class UrlPurgeForm extends FormBase {
   /**
    * Purge cloudflare cache for fiven urls.
    *
-   * @param $url
+   * @param array $urls
+   *  - array of urls to be purged.
+   * @param bool $silent
+   *   Whether to show the result messages.
    */
-  function purgeCloudflareCache($urls) {
+  function purgeCloudflareCache($urls, $silent = FALSE) {
+    if (!$this->isPurgingEnabled('cloudflare')) {
+      return;
+    }
     $info = $this->purger->purgeCloudflareCache($urls);
 
     // Logging / Messages.
     if (count($info['processed'])) {
-      // Show status message.
-      drupal_set_message(t('Cloudflare cache was purged successfully - processed @processed url(s)', ['@processed' => count($urls)]));
+      if (!$silent) {
+        // Show status message.
+        drupal_set_message(t('Cloudflare cache was purged successfully - processed @processed url(s)', ['@processed' => count($urls)]));
+      }
 
       // Add log entry for purged urls.
       $message = 'purgeCloudflareCache success <pre>' . print_r($urls, TRUE) . '</pre>';
       \Drupal::logger('custom_purge')->info($message);
     }
     else {
-      // Show status message.
-      drupal_set_message(t('Error while clearing cloudflare cache for given urls. Please check log.'));
+      if (!$silent) {
+        // Show status message.
+        drupal_set_message(t('Error while clearing cloudflare cache for given urls - processed @processed/@urls url(s). Please check logs fore more information.', [
+          '@processed' => count($info['processed']),
+          '@urls' => count($urls)
+        ]), 'warning');
+      }
 
       // Add log entry for erroneous urls.
       $message = 'purgeCloudflareCache error <pre>' . print_r($urls, TRUE) . '</pre>';
