@@ -338,6 +338,10 @@ class UrlPurgeForm extends FormBase {
    * @return int
    */
   protected function getFloodCount($identifier) {
+    // Flood table is only created when required.
+    if (!\Drupal::database()->schema()->tableExists('flood')) {
+      return 0;
+    }
     // Custom db query to get row count for checking flood protection.
     $query = \Drupal::database()->select('flood', 'f');
     $query->addField('f', 'fid');
