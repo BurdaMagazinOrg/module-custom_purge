@@ -61,10 +61,24 @@ class UrlPurger {
    *   whereas not successfully process urls are grouped into the key 'errors'.
    */
   public function purgeDrupalCache($urls) {
-    foreach ($urls as $url) {
-      $cid = $url . ':html';
-      $this->pageCacheBackend->delete($cid);
+    $cid_extensions = [
+      ':html'
+    ];
+
+    if ($config = $this->configFactory->get('custom_purge.settings')) {
+      $cid_extension_setting = $config->get('cid_extensions');
+      if (!empty($cid_extension_setting)) {
+        $cid_extensions = explode(',', $cid_extension_setting);
+      }
     }
+
+    foreach ($urls as $url) {
+      foreach ($cid_extensions as $cid_extension) {
+        $cid = $url . $cid_extension;
+        $this->pageCacheBackend->delete($cid);
+      }
+    }
+
     return ['processed' => $urls, 'errors' => []];
   }
 

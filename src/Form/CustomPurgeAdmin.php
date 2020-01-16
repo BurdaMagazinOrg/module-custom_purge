@@ -35,8 +35,6 @@ class CustomPurgeAdmin extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('custom_purge.settings');
-    $purge_caches = $config->get('purge_caches') ?? [];
-
     // General settings.
     $form['general'] = [
       '#type' => 'details',
@@ -73,19 +71,11 @@ class CustomPurgeAdmin extends ConfigFormBase {
       '#default_value' => $config->get('domain'),
     ];
 
-    // Drupal render cache.
-    $form['render_cache'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Render cache'),
-      '#open' => TRUE,
-    ];
-
-    $form['render_cache']['status'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Status'),
-      '#description' => $this->t('Enabled when checked, otherwise purging of render cache will be omitted.'),
-      '#parents' => ['purge_caches', 'render_cache'],
-      '#default_value' => !empty($purge_caches['render_cache']),
+    $cid_extensions = $config->get('cid_extensions');
+    $form['general']['cid_extensions'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Cache id extensions'),
+      '#default_value' => $cid_extensions,
     ];
 
     // Varnish related settings.
@@ -93,13 +83,6 @@ class CustomPurgeAdmin extends ConfigFormBase {
       '#type' => 'details',
       '#title' => $this->t('Varnish'),
       '#open' => TRUE,
-    ];
-    $form['varnish']['status'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Status'),
-      '#description' => $this->t('Enabled when checked, otherwise purging of varnish will be omitted.'),
-      '#parents' => ['purge_caches', 'varnish'],
-      '#default_value' => !empty($purge_caches['varnish']),
     ];
     $form['varnish']['varnish_port'] = [
       '#type' => 'number',
@@ -137,13 +120,6 @@ class CustomPurgeAdmin extends ConfigFormBase {
         '#title' => $this->t('Cloudflare'),
         '#open' => TRUE,
       ];
-      $form['cloudflare']['status'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Status'),
-        '#description' => $this->t('Enabled when checked, otherwise purging of cloudflare will be omitted.'),
-        '#parents' => ['purge_caches', 'cloudflare'],
-        '#default_value' => !empty($purge_caches['cloudflare']),
-      ];
 
       $form['cloudflare']['info'] = [
         '#markup' => $this->t('Cloudflare can be configured via <a href="@cloudflare_settings">CloudFlare Settings</a>', ['@cloudflare_settings' => $cloudflare_settings_url->toString()]),
@@ -166,9 +142,9 @@ class CustomPurgeAdmin extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
     $this->config('custom_purge.settings')
-      ->set('purge_caches', $form_state->getValue('purge_caches'))
       ->set('max_url_per_request', $form_state->getValue('max_url_per_request'))
       ->set('domain', $form_state->getValue('domain'))
+      ->set('cid_extensions', $form_state->getValue('cid_extensions'))
       ->set('flood_interval', $form_state->getValue('flood_interval'))
       ->set('flood_limit', $form_state->getValue('flood_limit'))
       ->set('varnish_port', $form_state->getValue('varnish_port'))
