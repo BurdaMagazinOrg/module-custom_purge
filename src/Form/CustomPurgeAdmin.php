@@ -71,6 +71,13 @@ class CustomPurgeAdmin extends ConfigFormBase {
       '#default_value' => $config->get('domain'),
     ];
 
+    $cid_extensions = $config->get('cid_extensions');
+    $form['general']['cid_extensions'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Cache id extensions'),
+      '#default_value' => $cid_extensions,
+    ];
+
     // Varnish related settings.
     $form['varnish'] = [
       '#type' => 'details',
@@ -137,6 +144,7 @@ class CustomPurgeAdmin extends ConfigFormBase {
     $this->config('custom_purge.settings')
       ->set('max_url_per_request', $form_state->getValue('max_url_per_request'))
       ->set('domain', $form_state->getValue('domain'))
+      ->set('cid_extensions', $form_state->getValue('cid_extensions'))
       ->set('flood_interval', $form_state->getValue('flood_interval'))
       ->set('flood_limit', $form_state->getValue('flood_limit'))
       ->set('varnish_port', $form_state->getValue('varnish_port'))
