@@ -1,0 +1,6 @@
+services:
+  custom_purge.commands:
+    class: \Drupal\custom_purge\Commands\CustomPurgeCommands
+    arguments: ['@custom_purge.url_purger']
+    tags:
+      - { name: drush.command }
