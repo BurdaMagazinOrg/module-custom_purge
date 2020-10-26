@@ -167,7 +167,7 @@ class UrlPurgeForm extends FormBase {
     if (count($urls) <= $max_url_per_request) {
       foreach ($urls as $url) {
         // Check for valid urls - if less/ equal then max_url_per_request.
-        if (!empty($url) && !filter_var($url, FILTER_VALIDATE_URL, FILTER_FLAG_HOST_REQUIRED)) {
+        if (!empty($url) && !filter_var($url, FILTER_VALIDATE_URL)) {
           $form_state->setErrorByName('purgable_urls', $this->t('Please provide valid urls in form below.'));
         }
       }
