@@ -160,6 +160,8 @@ class UrlPurgeForm extends FormBase {
     $max_url_per_request = $config->get('max_url_per_request');
     // Get urls to be pruged.
     $urls = preg_split('/\r\n|\r|\n/', $form_state->getValue('purgable_urls'));
+    // Prevent empty lines in the form input from creating empty url entries.
+    $urls = array_filter($urls);
 
     // Check for url count.
     if (count($urls) <= $max_url_per_request) {
