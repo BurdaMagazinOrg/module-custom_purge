@@ -62,7 +62,7 @@ class UrlPurger {
    */
   public function purgeDrupalCache($urls) {
     $cid_extensions = [
-      ':html'
+      ':'
     ];
 
     if ($config = $this->configFactory->get('custom_purge.settings')) {
