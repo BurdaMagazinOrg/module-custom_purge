@@ -113,7 +113,7 @@ class UrlPurgeForm extends FormBase {
     if ($flood_count >= $limit) {
       $disabled = TRUE;
       // Show message to users.
-      drupal_set_message($this->t('You cannot clear more than %limit cache entries in @interval. Try again later.', [
+      \Drupal::messenger()->addMessage($this->t('You cannot clear more than %limit cache entries in @interval. Try again later.',[
         '%limit' => $limit,
         '@interval' => $this->dateFormatter->formatInterval($interval),
       ]), 'warning');
@@ -188,7 +188,7 @@ class UrlPurgeForm extends FormBase {
     $urls = $form_state->get('purgable_urls_array');
     // No further processing if urls are empty - just show warning.
     if (empty($urls)) {
-      drupal_set_message(t('No url(s) were provided'), 'warning');
+      \Drupal::messenger()->addMessage(t('No url(s) were provided'), 'warning');
       return;
     }
 
@@ -322,7 +322,7 @@ class UrlPurgeForm extends FormBase {
     else {
       if (!$silent) {
         // Show status message.
-        drupal_set_message(t('Error while clearing cloudflare cache for given urls - processed @processed/@urls url(s). Please check logs fore more information.', [
+        \Drupal::messenger()->addMessage(t('Error while clearing cloudflare cache for given urls - processed @processed/@urls url(s). Please check logs fore more information.', [
           '@processed' => count($info['processed']),
           '@urls' => count($urls)
         ]), 'warning');
