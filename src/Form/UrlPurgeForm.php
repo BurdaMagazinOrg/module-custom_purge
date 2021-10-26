@@ -239,7 +239,7 @@ class UrlPurgeForm extends FormBase {
 
     if (!$silent) {
       // Show status message.
-      drupal_set_message(t('Drupal cache_render was purged successfully - processed @processed url(s)', ['@processed' => count($urls)]));
+      \Drupal::messenger()->addMessage(t('Drupal cache_render was purged successfully - processed @processed url(s)', ['@processed' => count($urls)]));
     }
 
     // Add log entry for purged urls.
@@ -265,10 +265,11 @@ class UrlPurgeForm extends FormBase {
     if (count($info['errors'])) {
       if (!$silent) {
         // Show status message.
-        drupal_set_message(t('Error while clearing varnish cache for given urls - processed @processed/@urls url(s). Please check logs fore more information.', [
-          '@processed' => count($info['processed']),
-          '@urls' => count($urls)
-        ]), 'warning');
+        \Drupal::messenger()
+          ->addMessage(t('Error while clearing varnish cache for given urls - processed @processed/@urls url(s). Please check logs fore more information.', [
+            '@processed' => count($info['processed']),
+            '@urls' => count($urls),
+          ]), 'warning');
       }
 
       // Add log entry for erroneous purged urls.
@@ -284,7 +285,7 @@ class UrlPurgeForm extends FormBase {
     else {
       if (!$silent) {
         // Show status message.
-        drupal_set_message(t('Varnish was purged successfully - processed @processed url(s)', ['@processed' => count($info['processed'])]));
+        \Drupal::messenger()->addMessage(t('Varnish was purged successfully - processed @processed url(s)', ['@processed' => count($info['processed'])]));
       }
 
       // Add log entry for purged urls.
@@ -311,7 +312,7 @@ class UrlPurgeForm extends FormBase {
     if (count($info['processed'])) {
       if (!$silent) {
         // Show status message.
-        drupal_set_message(t('Cloudflare cache was purged successfully - processed @processed url(s)', ['@processed' => count($urls)]));
+        \Drupal::messenger()->addMessage(t('Cloudflare cache was purged successfully - processed @processed url(s)', ['@processed' => count($urls)]));
       }
 
       // Add log entry for purged urls.
